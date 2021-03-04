@@ -1,0 +1,16 @@
+version: '2'
+
+services:
+  php:
+    image: lvo9/demo
+    command: tail -f /dev/null
+    volumes:
+      - .:/srv
+    working_dir: /srv
+    environment:
+      DATABASE_URL: 'mysql://root:mypass@db:3306/mydb?serverVersion=mariadb-10.5.9'
+
+  db:
+    image: mariadb:10.5.9
+    environment:
+      MYSQL_ROOT_PASSWORD: mypass
