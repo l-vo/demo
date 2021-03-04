@@ -1,0 +1,70 @@
+name: CI
+
+on: push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: lvo9/demo
+    services:
+      db:
+        image: mariadb:10.5.9
+        env:
+          MYSQL_ROOT_PASSWORD: mypass
+    env:
+      DATABASE_URL: 'mysql://root:mypass@db:3306/mydb?serverVersion=mariadb-10.5.9'
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        id: cache-vendor
+        with:
+          path: |
+            vendor/
+            bin/.phpunit/
+          key: vendor-${{ hashFiles('composer.lock') }}
+      - run: composer install
+        #if: steps.cache-vendor.outputs.cache-hit != 'true'
+      - run: bin/console doctrine:database:create
+      - run: bin/console doctrine:migrations:migrate -n
+      - run: bin/phpunit install
+      - uses: actions/upload-artifact@v2
+        with:
+          name: vendors
+          path: vendor/
+      - uses: actions/upload-artifact@v2
+        with:
+          name: phpunit
+          path: bin/.phpunit/
+
+  cs:
+    needs: [build]
+    runs-on: ubuntu-latest
+    container: lvo9/demo
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
+        with:
+          name: vendors
+          path: vendor/
+      - uses: actions/download-artifact@v2
+        with:
+          name: phpunit
+          path: bin/.phpunit/
+      - run: vendor/bin/php-cs-fixer fix --dry-run
+      - run: php -d memory_limit=-1 vendor/bin/phpstan analyse src
+
+  test:
+    needs: [build]
+    runs-on: ubuntu-latest
+    container: lvo9/demo
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
+        with:
+          name: vendors
+          path: vendor/
+      - uses: actions/download-artifact@v2
+        with:
+          name: phpunit
+          path: bin/.phpunit/
+      - run: bin/phpunit
