@@ -23,7 +23,7 @@ jobs:
             bin/.phpunit/
           key: vendor-${{ hashFiles('composer.lock') }}
       - run: composer install
-        #if: steps.cache-vendor.outputs.cache-hit != 'true'
+        if: steps.cache-vendor.outputs.cache-hit != 'true'
       - run: bin/console doctrine:database:create
       - run: bin/console doctrine:migrations:migrate -n
       - run: bin/phpunit install
@@ -50,7 +50,7 @@ jobs:
         with:
           name: phpunit
           path: bin/.phpunit/
-      - run: vendor/bin/php-cs-fixer fix --dry-run
+      - run: php vendor/bin/php-cs-fixer fix --dry-run
       - run: php -d memory_limit=-1 vendor/bin/phpstan analyse src
 
   test:
@@ -67,4 +67,4 @@ jobs:
         with:
           name: phpunit
           path: bin/.phpunit/
-      - run: bin/phpunit
+      - run: php bin/phpunit
