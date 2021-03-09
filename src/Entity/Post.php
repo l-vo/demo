@@ -101,7 +101,7 @@ class Post
      *      orphanRemoval=true,
      *      cascade={"persist"}
      * )
-     * @ORM\OrderBy({"publishedAt": "DESC", "id": "DESC"})
+     * @ORM\OrderBy({"id": "DESC"})
      */
     private $comments;
 
